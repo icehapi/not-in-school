@@ -11,13 +11,13 @@ register_success = 0
 undefineError = -100
 
 
-url = "https://student.wozaixiaoyuan.com/my/getStudentSecretInfo.json"
+url = "https://gw.wozaixiaoyuan.com/basicinfo/mobile/my/index"
 headers = {
    "content-length": "0",
-   "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat",
-   "content-type": "application/x-www-form-urlencoded",
+   "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat",
+   "content-type": "application/json;charset=UTF-8",
    "jwsession": "",
-   "referer": "https://servicewechat.com/wxce6d08f781975d91/176/page-frame.html",
+   "referer": "https://gw.wozaixiaoyuan.com/h5/mobile/basicinfo/index/home/my",
    "accept-encoding": "gzip, deflate, br",
 }
 query = 'insert into stu_info(sno, email, name, token, sendemail, state) values(%s, %s, %s, %s, %s, %s)'
@@ -104,23 +104,23 @@ def main():
         # 白名单机制，不需要则注释相应位置
         cur.execute("select sno from whitelist")
         whitelist = list(chain.from_iterable(cur.fetchall()))
-
         flag = False
         for value in values:
             # print(value)
             info_dict = postFormNightlocate(value[0])
-            # 检测是否在白名单内
-            if(info_dict["data"]["number"] not in whitelist):
-                log("id: " + info_dict["data"]["number"] + ", name: " + info_dict["data"]["name"] + " 不在白名单")
-                continue
-            log("name: " + info_dict["data"]["name"] + " 上传了数据")
             # log(info_dict)
             try:
-                if (info_dict['code'] == -10):
+                if (info_dict['code'] == -10 or info_dict['code'] == 103):
                     cur.execute("delete from user where token =" + "'" + value[0] + "'")
                     continue
             except:
                 pass
+            # 检测是否在白名单内
+            if(info_dict["data"]["number"] not in whitelist):
+                log("id: " + info_dict["data"]["number"] + ", name: " + info_dict["data"]["name"] + " 不在白名单")
+                cur.execute("delete from user where token =" + "'" + value[0] + "'")
+                continue
+            log("name: " + info_dict["data"]["name"] + " 上传了数据")
             tmpcur.execute("select * from stu_info where sno =" + "'" + info_dict["data"]["number"] + "'")
             res = tmpcur.fetchall()
             if (len(res)):
